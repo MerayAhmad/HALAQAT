@@ -6,6 +6,8 @@
 <title>ورد ودود — إدارة حلقات التحفيظ</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Aref+Ruqaa:wght@400;700&family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 <style>
   :root{
     --ink:#17241F;
@@ -166,28 +168,67 @@ function seedData(){
   };
 }
 
-async function loadAll(){
-  try{
-    const r = await window.storage.get('quran-app-data', true);
-    DATA = JSON.parse(r.value);
-  }catch(e){
+/* ====== إعدادات Firebase ======
+   عوّض القيم دي ببيانات مشروعك من Firebase Console (خطوات الشرح مرفقة معاك).
+   ده الاتصال الوحيد اللي محتاج تعدّله في الملف كله. */
+const firebaseConfig = {
+  apiKey: "AIzaSyAI1pCQEcgNUGvLmOPZCfRSaVlInOcwzQQ",
+  authDomain: "halaqat-b1df7.firebaseapp.com",
+  projectId: "halaqat-b1df7",
+  storageBucket: "halaqat-b1df7.firebasestorage.app",
+  messagingSenderId: "835582626921",
+  appId: "1:835582626921:web:46f436fa66b5eef85226f8"
+};
+
+let db = null;
+let FIREBASE_READY = false;
+try{
+  firebase.initializeApp(firebaseConfig);
+  db = firebase.firestore();
+  FIREBASE_READY = true;
+}catch(e){ console.error('Firebase init failed', e); }
+
+const DATA_DOC = () => db.collection('halaqat-app').doc('data');
+
+function initCloudSync(){
+  if(!FIREBASE_READY){
     DATA = seedData();
-    await window.storage.set('quran-app-data', JSON.stringify(DATA), true);
+    render();
+    return;
   }
-  try{
-    const s = await window.storage.get('quran-app-session', false);
-    SESSION = JSON.parse(s.value);
-  }catch(e){ SESSION = { role:null, teacherId:null, studentId:null }; }
-  render();
+  DATA_DOC().get().then(doc=>{
+    if(!doc.exists){
+      DATA = seedData();
+      DATA_DOC().set({payload: JSON.stringify(DATA)});
+    }
+  }).catch(e=>console.error('Firestore read error', e));
+
+  DATA_DOC().onSnapshot(doc=>{
+    if(doc.exists){
+      try{ DATA = JSON.parse(doc.data().payload); }catch(e){ DATA = seedData(); }
+      render();
+    }
+  }, err=>console.error('Firestore sync error', err));
 }
 
 async function saveData(){
-  try{ await window.storage.set('quran-app-data', JSON.stringify(DATA), true); }
-  catch(e){ console.error('storage error', e); }
+  if(!FIREBASE_READY) return;
+  try{ await DATA_DOC().set({payload: JSON.stringify(DATA)}); }
+  catch(e){ console.error('Firestore write error', e); }
 }
-async function saveSession(){
-  try{ await window.storage.set('quran-app-session', JSON.stringify(SESSION), false); }
-  catch(e){ console.error('storage error', e); }
+
+function loadSession(){
+  try{ return JSON.parse(localStorage.getItem('quran-app-session')) || { role:null, teacherId:null, studentId:null }; }
+  catch(e){ return { role:null, teacherId:null, studentId:null }; }
+}
+function saveSession(){
+  try{ localStorage.setItem('quran-app-session', JSON.stringify(SESSION)); }
+  catch(e){ console.error('session storage error', e); }
+}
+
+function loadAll(){
+  SESSION = loadSession();
+  initCloudSync();
 }
 
 function getHalaqa(id){ return DATA.halaqat.find(h=>h.id===id); }

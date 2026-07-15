@@ -1,0 +1,743 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<title>ورد ودود — إدارة حلقات التحفيظ</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Aref+Ruqaa:wght@400;700&family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#17241F;
+    --ink-soft:#4B564F;
+    --paper:#F1ECDC;
+    --paper-2:#E8E1CB;
+    --teal:#0E3B36;
+    --teal-2:#134A44;
+    --gold:#C79A3D;
+    --gold-light:#EFE1BE;
+    --gold-dark:#8C6A24;
+    --sage:#5F8A65;
+    --sage-light:#DEEBDD;
+    --sage-dark:#33502F;
+    --rose:#B5534C;
+    --rose-light:#F3DEDB;
+    --rose-dark:#7A312B;
+    --amber:#C08A2E;
+    --amber-light:#F2E3BE;
+    --amber-dark:#7A5514;
+    --radius:14px;
+    --radius-sm:10px;
+    font-family:'Tajawal',sans-serif;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;background:var(--paper-2);color:var(--ink);}
+  body{min-height:100vh;display:flex;justify-content:center;}
+  #app{width:100%;max-width:430px;min-height:100vh;background:var(--paper);position:relative;display:flex;flex-direction:column;box-shadow:0 0 40px rgba(0,0,0,0.12);}
+  h1,h2,h3{font-family:'Aref Ruqaa',serif;font-weight:700;margin:0;color:var(--teal);}
+  button{font-family:'Tajawal',sans-serif;cursor:pointer;border:none;background:none;color:inherit;}
+  input,select,textarea{font-family:'Tajawal',sans-serif;}
+  ::selection{background:var(--gold-light);}
+
+  .topbar{background:var(--teal);color:var(--paper);padding:18px 20px 16px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:20;}
+  .topbar .brand{display:flex;align-items:center;gap:10px;}
+  .topbar .brand .mark{width:34px;height:34px;border-radius:50%;background:var(--gold);display:flex;align-items:center;justify-content:center;color:var(--ink);font-family:'Aref Ruqaa',serif;font-size:18px;font-weight:700;flex-shrink:0;}
+  .topbar h1{font-size:20px;color:var(--paper);}
+  .topbar .role-tag{font-size:11px;color:var(--gold-light);opacity:.85;margin-top:2px;}
+  .switch-btn{font-size:12px;color:var(--paper);opacity:.8;border:1px solid rgba(241,236,220,0.35);padding:6px 10px;border-radius:20px;}
+  .switch-btn:active{opacity:1;}
+
+  main{flex:1;padding:16px 16px 90px;overflow-y:auto;}
+
+  .card{background:#fff;border:1px solid rgba(23,36,31,0.08);border-radius:var(--radius);padding:16px;margin-bottom:14px;}
+  .card h3{font-size:16px;margin-bottom:8px;}
+  .muted{color:var(--ink-soft);font-size:13px;}
+  .row{display:flex;align-items:center;justify-content:space-between;gap:10px;}
+  .stack{display:flex;flex-direction:column;gap:12px;}
+
+  .stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px;}
+  .stat{background:var(--teal);color:var(--paper);border-radius:var(--radius);padding:14px;}
+  .stat .n{font-size:26px;font-weight:700;font-family:'Aref Ruqaa',serif;}
+  .stat .l{font-size:12px;color:var(--gold-light);margin-top:2px;}
+  .stat.gold{background:var(--gold);color:var(--ink);}
+  .stat.gold .l{color:var(--gold-dark);}
+
+  .pill{display:inline-block;font-size:11px;padding:3px 10px;border-radius:20px;font-weight:500;}
+  .pill.sage{background:var(--sage-light);color:var(--sage-dark);}
+  .pill.rose{background:var(--rose-light);color:var(--rose-dark);}
+  .pill.amber{background:var(--amber-light);color:var(--amber-dark);}
+  .pill.gold{background:var(--gold-light);color:var(--gold-dark);}
+
+  .list-item{display:flex;align-items:center;justify-content:space-between;padding:12px 4px;border-bottom:1px solid rgba(23,36,31,0.08);}
+  .list-item:last-child{border-bottom:none;}
+  .avatar{width:38px;height:38px;border-radius:50%;background:var(--sage-light);color:var(--sage-dark);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;flex-shrink:0;}
+
+  .btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:10px 16px;border-radius:var(--radius-sm);font-size:14px;font-weight:500;border:1px solid var(--teal);color:var(--teal);}
+  .btn.primary{background:var(--teal);color:var(--paper);}
+  .btn.gold{background:var(--gold);color:var(--ink);border-color:var(--gold);}
+  .btn.block{width:100%;}
+  .btn.ghost{border-color:rgba(23,36,31,0.18);color:var(--ink-soft);}
+  .btn.sm{padding:6px 12px;font-size:12px;}
+  .btn:active{transform:scale(0.98);}
+
+  .field{margin-bottom:12px;}
+  .field label{display:block;font-size:12px;color:var(--ink-soft);margin-bottom:5px;}
+  .field input,.field select,.field textarea{width:100%;padding:10px 12px;border-radius:var(--radius-sm);border:1px solid rgba(23,36,31,0.18);background:#fdfcf8;font-size:14px;color:var(--ink);}
+  .field textarea{resize:vertical;min-height:60px;}
+  .seg{display:flex;gap:6px;flex-wrap:wrap;}
+  .seg button{flex:1;padding:9px 6px;border:1px solid rgba(23,36,31,0.18);border-radius:var(--radius-sm);font-size:12.5px;color:var(--ink-soft);min-width:70px;}
+  .seg button.active{background:var(--teal);border-color:var(--teal);color:var(--paper);}
+
+  .bottomnav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:430px;background:#fff;border-top:1px solid rgba(23,36,31,0.1);display:flex;padding:8px 6px 10px;z-index:30;}
+  .navbtn{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;font-size:11px;color:var(--ink-soft);padding:6px 2px;border-radius:10px;}
+  .navbtn.active{color:var(--teal);font-weight:700;}
+  .navbtn .ic{font-size:19px;}
+
+  .tasbih{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;padding:10px 4px;}
+  .bead{width:22px;height:22px;border-radius:50%;background:var(--paper-2);border:1.5px solid rgba(23,36,31,0.15);display:flex;align-items:center;justify-content:center;font-size:9px;color:var(--ink-soft);flex-shrink:0;}
+  .bead.done{background:var(--gold);border-color:var(--gold-dark);color:#fff;font-weight:700;}
+
+  .empty{text-align:center;padding:30px 14px;color:var(--ink-soft);}
+  .empty .ic{font-size:34px;margin-bottom:8px;display:block;}
+
+  .modal-overlay{position:fixed;inset:0;background:rgba(23,36,31,0.5);display:flex;align-items:flex-end;justify-content:center;z-index:100;}
+  .modal-overlay .sheet{background:var(--paper);width:100%;max-width:430px;border-radius:20px 20px 0 0;padding:20px;max-height:85vh;overflow-y:auto;}
+  .sheet-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;}
+  .close-x{font-size:20px;color:var(--ink-soft);width:30px;height:30px;display:flex;align-items:center;justify-content:center;}
+
+  .role-select{padding:60px 26px;text-align:center;display:flex;flex-direction:column;align-items:center;gap:26px;min-height:100vh;justify-content:center;}
+  .role-select .mark-big{width:78px;height:78px;border-radius:50%;background:var(--gold);color:var(--ink);display:flex;align-items:center;justify-content:center;font-family:'Aref Ruqaa',serif;font-size:36px;font-weight:700;}
+  .role-select h1{font-size:26px;}
+  .role-select p{color:var(--ink-soft);font-size:14px;line-height:1.8;margin-top:-14px;}
+  .role-opt{width:100%;background:#fff;border:1px solid rgba(23,36,31,0.1);border-radius:var(--radius);padding:16px;display:flex;align-items:center;gap:14px;text-align:right;}
+  .role-opt .ic{font-size:22px;width:44px;height:44px;border-radius:50%;background:var(--sage-light);color:var(--sage-dark);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+  .role-opt .t{font-weight:700;font-size:15px;}
+  .role-opt .d{font-size:12px;color:var(--ink-soft);margin-top:2px;}
+
+  .grade-btn{flex:1;padding:8px 4px;border-radius:var(--radius-sm);border:1px solid rgba(23,36,31,0.18);font-size:12px;}
+  .grade-btn.excellent.active{background:var(--sage);color:#fff;border-color:var(--sage);}
+  .grade-btn.good.active{background:var(--amber);color:#fff;border-color:var(--amber);}
+  .grade-btn.weak.active{background:var(--rose);color:#fff;border-color:var(--rose);}
+
+  .banner{background:var(--sage-light);color:var(--sage-dark);border-radius:var(--radius-sm);padding:10px 12px;font-size:12.5px;margin-bottom:12px;line-height:1.6;}
+</style>
+</head>
+<body>
+<div id="app"></div>
+
+<script>
+const ICONS = {
+  home:'&#127968;', book:'&#128214;', users:'&#128101;', chart:'&#128202;',
+  mosque:'&#127964;', teacher:'&#127891;', parent:'&#128100;', check:'&#10003;',
+  plus:'&#10133;', close:'&#10005;', bead:'&#128302;', calendar:'&#128197;',
+  star:'&#11088;'
+};
+
+let DATA = null;
+let SESSION = { role:null, teacherId:null, studentId:null };
+let SCREEN = 'home';
+let MODAL = null;
+
+function uid(p){ return p + Math.random().toString(36).slice(2,9); }
+function todayStr(){ return new Date().toISOString().slice(0,10); }
+function dateLabel(d){
+  try{ return new Date(d).toLocaleDateString('ar-EG',{weekday:'long',day:'numeric',month:'long'}); }
+  catch(e){ return d; }
+}
+
+function seedData(){
+  return {
+    halaqat:[
+      {id:'h1', name:'حلقة الفجر', teacherId:'t1', level:'متوسط', schedule:'يوميًا بعد صلاة الفجر'},
+      {id:'h2', name:'حلقة العصر', teacherId:'t2', level:'مبتدئ', schedule:'الأحد والثلاثاء والخميس'}
+    ],
+    teachers:[
+      {id:'t1', name:'الشيخ أحمد الفقي', phone:'0100000000'},
+      {id:'t2', name:'الشيخ محمد سالم', phone:'0100000001'}
+    ],
+    students:[
+      {id:'s1', name:'يوسف عادل', halaqaId:'h1', parentPhone:'0111111111'},
+      {id:'s2', name:'عبدالله كريم', halaqaId:'h1', parentPhone:'0111111112'},
+      {id:'s3', name:'حمزة طارق', halaqaId:'h2', parentPhone:'0111111113'}
+    ],
+    attendance:{},
+    memorization:{},
+    completedJuz:{}
+  };
+}
+
+async function loadAll(){
+  try{
+    const r = await window.storage.get('quran-app-data', true);
+    DATA = JSON.parse(r.value);
+  }catch(e){
+    DATA = seedData();
+    await window.storage.set('quran-app-data', JSON.stringify(DATA), true);
+  }
+  try{
+    const s = await window.storage.get('quran-app-session', false);
+    SESSION = JSON.parse(s.value);
+  }catch(e){ SESSION = { role:null, teacherId:null, studentId:null }; }
+  render();
+}
+
+async function saveData(){
+  try{ await window.storage.set('quran-app-data', JSON.stringify(DATA), true); }
+  catch(e){ console.error('storage error', e); }
+}
+async function saveSession(){
+  try{ await window.storage.set('quran-app-session', JSON.stringify(SESSION), false); }
+  catch(e){ console.error('storage error', e); }
+}
+
+function getHalaqa(id){ return DATA.halaqat.find(h=>h.id===id); }
+function getTeacher(id){ return DATA.teachers.find(t=>t.id===id); }
+function getStudent(id){ return DATA.students.find(s=>s.id===id); }
+function studentsOf(halaqaId){ return DATA.students.filter(s=>s.halaqaId===halaqaId); }
+function halaqatOf(teacherId){ return DATA.halaqat.filter(h=>h.teacherId===teacherId); }
+
+function attendanceRate(halaqaId, days){
+  days = days || 30;
+  let total=0, present=0;
+  const cutoff = Date.now() - days*86400000;
+  Object.keys(DATA.attendance).forEach(key=>{
+    const [date, hid] = key.split('_');
+    if(hid!==halaqaId) return;
+    if(new Date(date).getTime() < cutoff) return;
+    const rec = DATA.attendance[key];
+    Object.values(rec).forEach(st=>{ total++; if(st==='حاضر') present++; });
+  });
+  return total ? Math.round(present/total*100) : null;
+}
+
+function studentAttendanceStats(studentId){
+  let present=0, absent=0, late=0;
+  Object.keys(DATA.attendance).forEach(key=>{
+    const rec = DATA.attendance[key];
+    if(rec[studentId]){
+      if(rec[studentId]==='حاضر') present++;
+      else if(rec[studentId]==='غائب') absent++;
+      else if(rec[studentId]==='متأخر') late++;
+    }
+  });
+  return {present, absent, late, total:present+absent+late};
+}
+
+function completedJuzList(studentId){
+  return (DATA.completedJuz[studentId] || []).slice().sort((a,b)=>a-b);
+}
+
+function esc(s){
+  return String(s==null?'':s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+function setScreen(s){ SCREEN = s; render(); }
+function openModal(name, payload){ MODAL = {name, payload: payload||{}}; render(); }
+function closeModal(){ MODAL = null; render(); }
+
+async function chooseRole(role){
+  SESSION.role = role;
+  if(role==='admin'){ SCREEN='home'; }
+  await saveSession();
+  render();
+}
+
+async function logout(){
+  SESSION = {role:null, teacherId:null, studentId:null};
+  SCREEN='home';
+  await saveSession();
+  render();
+}
+
+function TOPBAR(title, roleLabel){
+  return `<div class="topbar">
+    <div class="brand">
+      <div class="mark">${ICONS.mosque}</div>
+      <div><h1>${esc(title)}</h1><div class="role-tag">${esc(roleLabel)}</div></div>
+    </div>
+    <button class="switch-btn" onclick="logout()">تبديل الدور</button>
+  </div>`;
+}
+
+function NAV(items){
+  return `<div class="bottomnav">${items.map(it=>`
+    <button class="navbtn ${SCREEN===it.key?'active':''}" onclick="setScreen('${it.key}')">
+      <span class="ic">${it.icon}</span><span>${it.label}</span>
+    </button>`).join('')}</div>`;
+}
+
+function render(){
+  const app = document.getElementById('app');
+  if(!DATA){ app.innerHTML = `<div class="empty" style="padding-top:100px;"><span class="ic">${ICONS.book}</span>جاري التحميل...</div>`; return; }
+  if(!SESSION.role){ app.innerHTML = ROLE_SELECT(); return; }
+  if(SESSION.role==='teacher' && !SESSION.teacherId){ app.innerHTML = TEACHER_LOGIN(); return; }
+  if(SESSION.role==='parent' && !SESSION.studentId){ app.innerHTML = PARENT_LOGIN(); return; }
+
+  let body='';
+  if(SESSION.role==='admin') body = ADMIN_SCREEN();
+  else if(SESSION.role==='teacher') body = TEACHER_SCREEN();
+  else body = PARENT_SCREEN();
+
+  app.innerHTML = body + (MODAL ? MODAL_HTML() : '');
+  const modalEl = app.querySelector('.modal-overlay');
+  if(modalEl) modalEl.addEventListener('click', (e)=>{ if(e.target===modalEl) closeModal(); });
+}
+
+function ROLE_SELECT(){
+  return `<div class="role-select">
+    <div class="mark-big">${ICONS.mosque}</div>
+    <div>
+      <h1>ورد ودود</h1>
+      <p>تطبيق لإدارة حلقات تحفيظ القرآن الكريم<br>بالمساجد — للإدارة والمعلمين وأولياء الأمور</p>
+    </div>
+    <div class="stack" style="width:100%;">
+      <button class="role-opt" onclick="chooseRole('admin')">
+        <div class="ic">${ICONS.chart}</div>
+        <div><div class="t">مسؤول المسجد</div><div class="d">إدارة الحلقات والمعلمين والطلاب والتقارير</div></div>
+      </button>
+      <button class="role-opt" onclick="chooseRole('teacher')">
+        <div class="ic">${ICONS.teacher}</div>
+        <div><div class="t">معلم</div><div class="d">تسجيل الحضور ومتابعة التسميع لحلقتك</div></div>
+      </button>
+      <button class="role-opt" onclick="chooseRole('parent')">
+        <div class="ic">${ICONS.parent}</div>
+        <div><div class="t">ولي أمر / طالب</div><div class="d">متابعة تقدم الحفظ والحضور</div></div>
+      </button>
+    </div>
+  </div>`;
+}
+
+function TEACHER_LOGIN(){
+  return `<div class="role-select">
+    <div class="mark-big">${ICONS.teacher}</div>
+    <h1>اختر اسمك</h1>
+    <div class="stack" style="width:100%;">
+      ${DATA.teachers.map(t=>`
+        <button class="role-opt" onclick="selectTeacher('${t.id}')">
+          <div class="ic">${ICONS.teacher}</div>
+          <div><div class="t">${esc(t.name)}</div><div class="d">${halaqatOf(t.id).map(h=>esc(h.name)).join('، ') || 'لا توجد حلقة بعد'}</div></div>
+        </button>`).join('')}
+    </div>
+    <button class="btn ghost block" onclick="logout()">رجوع</button>
+  </div>`;
+}
+async function selectTeacher(id){ SESSION.teacherId = id; await saveSession(); render(); }
+
+function PARENT_LOGIN(){
+  return `<div class="role-select">
+    <div class="mark-big">${ICONS.parent}</div>
+    <h1>اختر اسم الطالب</h1>
+    <div class="stack" style="width:100%;max-height:50vh;overflow-y:auto;">
+      ${DATA.students.map(s=>`
+        <button class="role-opt" onclick="selectStudent('${s.id}')">
+          <div class="ic">${ICONS.parent}</div>
+          <div><div class="t">${esc(s.name)}</div><div class="d">${esc(getHalaqa(s.halaqaId)?.name||'')}</div></div>
+        </button>`).join('')}
+    </div>
+    <button class="btn ghost block" onclick="logout()">رجوع</button>
+  </div>`;
+}
+async function selectStudent(id){ SESSION.studentId = id; await saveSession(); render(); }
+
+/* ---------------- ADMIN ---------------- */
+function ADMIN_SCREEN(){
+  const top = TOPBAR('ورد ودود', 'مسؤول المسجد');
+  let content='';
+  if(SCREEN==='home') content = ADMIN_HOME();
+  else if(SCREEN==='halaqat') content = ADMIN_HALAQAT();
+  else if(SCREEN==='students') content = ADMIN_STUDENTS();
+  else if(SCREEN==='reports') content = ADMIN_REPORTS();
+  const nav = NAV([
+    {key:'home', icon:ICONS.home, label:'الرئيسية'},
+    {key:'halaqat', icon:ICONS.book, label:'الحلقات'},
+    {key:'students', icon:ICONS.users, label:'الطلاب'},
+    {key:'reports', icon:ICONS.chart, label:'التقارير'}
+  ]);
+  return top + `<main>${content}</main>` + nav;
+}
+
+function ADMIN_HOME(){
+  const totalStudents = DATA.students.length;
+  const totalHalaqat = DATA.halaqat.length;
+  const today = todayStr();
+  let presentToday=0, totalToday=0;
+  Object.keys(DATA.attendance).forEach(k=>{
+    if(k.startsWith(today+'_')){
+      Object.values(DATA.attendance[k]).forEach(st=>{ totalToday++; if(st==='حاضر') presentToday++; });
+    }
+  });
+  const rate = totalToday? Math.round(presentToday/totalToday*100) : null;
+  return `
+  <div class="banner">${dateLabel(today)} — بيانات هذا التطبيق مشتركة بين كل من يفتحه (نسخة تجريبية).</div>
+  <div class="stat-grid">
+    <div class="stat"><div class="n">${totalHalaqat}</div><div class="l">عدد الحلقات</div></div>
+    <div class="stat gold"><div class="n">${totalStudents}</div><div class="l">عدد الطلاب</div></div>
+    <div class="stat"><div class="n">${DATA.teachers.length}</div><div class="l">عدد المعلمين</div></div>
+    <div class="stat gold"><div class="n">${rate===null?'—':rate+'%'}</div><div class="l">نسبة الحضور اليوم</div></div>
+  </div>
+  <div class="card">
+    <h3>الحلقات</h3>
+    ${DATA.halaqat.map(h=>{
+      const r = attendanceRate(h.id);
+      return `<div class="list-item">
+        <div><div style="font-weight:700;font-size:14px;">${esc(h.name)}</div><div class="muted">${esc(getTeacher(h.teacherId)?.name||'بدون معلم')} · ${studentsOf(h.id).length} طالب</div></div>
+        <span class="pill sage">${r===null?'لا بيانات':'حضور '+r+'%'}</span>
+      </div>`;
+    }).join('') || '<div class="empty">لا توجد حلقات بعد</div>'}
+  </div>`;
+}
+
+function ADMIN_HALAQAT(){
+  return `
+  <button class="btn primary block" style="margin-bottom:14px;" onclick="openModal('addHalaqa')">${ICONS.plus} إضافة حلقة جديدة</button>
+  ${DATA.halaqat.map(h=>`
+    <div class="card">
+      <div class="row">
+        <h3>${esc(h.name)}</h3>
+        <span class="pill amber">${esc(h.level)}</span>
+      </div>
+      <div class="muted" style="margin:6px 0;">${ICONS.calendar} ${esc(h.schedule)}</div>
+      <div class="muted">المعلم: ${esc(getTeacher(h.teacherId)?.name || 'غير محدد')}</div>
+      <div class="muted">عدد الطلاب: ${studentsOf(h.id).length}</div>
+      <div class="row" style="margin-top:10px;gap:8px;">
+        <button class="btn sm ghost" onclick="openModal('editHalaqa',{id:'${h.id}'})">تعديل</button>
+        <button class="btn sm ghost" style="color:var(--rose-dark);border-color:var(--rose-light);" onclick="deleteHalaqa('${h.id}')">حذف</button>
+      </div>
+    </div>
+  `).join('') || '<div class="empty"><span class="ic">'+ICONS.book+'</span>لا توجد حلقات — أضف أول حلقة</div>'}
+  <div class="card">
+    <h3>المعلمون</h3>
+    ${DATA.teachers.map(t=>`<div class="list-item">
+        <div class="row" style="gap:10px;"><div class="avatar">${esc(t.name[0])}</div><div><div style="font-weight:700;font-size:14px;">${esc(t.name)}</div><div class="muted">${esc(t.phone)}</div></div></div>
+        <span class="pill sage">${halaqatOf(t.id).length} حلقة</span>
+      </div>`).join('')}
+    <button class="btn ghost block" style="margin-top:10px;" onclick="openModal('addTeacher')">${ICONS.plus} إضافة معلم</button>
+  </div>`;
+}
+
+function ADMIN_STUDENTS(){
+  return `
+  <button class="btn primary block" style="margin-bottom:14px;" onclick="openModal('addStudent')">${ICONS.plus} إضافة طالب</button>
+  ${DATA.halaqat.map(h=>`
+    <div class="card">
+      <h3 style="margin-bottom:8px;">${esc(h.name)}</h3>
+      ${studentsOf(h.id).map(s=>{
+        const juz = completedJuzList(s.id).length;
+        return `<div class="list-item">
+          <div class="row" style="gap:10px;"><div class="avatar">${esc(s.name[0])}</div><div><div style="font-weight:700;font-size:14px;">${esc(s.name)}</div><div class="muted">${juz} جزء محفوظ</div></div></div>
+          <button class="btn sm ghost" onclick="openModal('editStudent',{id:'${s.id}'})">تعديل</button>
+        </div>`;
+      }).join('') || '<div class="muted">لا يوجد طلاب في هذه الحلقة</div>'}
+    </div>
+  `).join('')}`;
+}
+
+function ADMIN_REPORTS(){
+  return DATA.halaqat.map(h=>{
+    const st = studentsOf(h.id);
+    const rate = attendanceRate(h.id);
+    const totalJuz = st.reduce((sum,s)=>sum+completedJuzList(s.id).length,0);
+    return `<div class="card">
+      <h3>${esc(h.name)}</h3>
+      <div class="stat-grid" style="margin-top:10px;">
+        <div class="stat"><div class="n">${rate===null?'—':rate+'%'}</div><div class="l">نسبة الحضور (30 يوم)</div></div>
+        <div class="stat gold"><div class="n">${totalJuz}</div><div class="l">إجمالي الأجزاء المحفوظة</div></div>
+      </div>
+      ${st.map(s=>{
+        const a = studentAttendanceStats(s.id);
+        return `<div class="list-item">
+          <div><div style="font-weight:700;font-size:14px;">${esc(s.name)}</div><div class="muted">حضور ${a.present} · غياب ${a.absent} · تأخير ${a.late}</div></div>
+          <span class="pill gold">${completedJuzList(s.id).length} جزء</span>
+        </div>`;
+      }).join('') || '<div class="muted">لا يوجد طلاب</div>'}
+    </div>`;
+  }).join('') || '<div class="empty">لا توجد بيانات لعرضها بعد</div>';
+}
+
+async function deleteHalaqa(id){
+  if(!confirm('هل تريد حذف هذه الحلقة؟')) return;
+  DATA.halaqat = DATA.halaqat.filter(h=>h.id!==id);
+  DATA.students.forEach(s=>{ if(s.halaqaId===id) s.halaqaId=null; });
+  await saveData(); render();
+}
+
+/* ---------------- TEACHER ---------------- */
+function TEACHER_SCREEN(){
+  const t = getTeacher(SESSION.teacherId);
+  const top = TOPBAR('ورد ودود', 'المعلم: '+ (t?t.name:''));
+  const myHalaqat = halaqatOf(SESSION.teacherId);
+  let content='';
+  if(SCREEN==='home') content = TEACHER_ATTENDANCE(myHalaqat);
+  else if(SCREEN==='record') content = TEACHER_RECORD(myHalaqat);
+  else if(SCREEN==='students') content = TEACHER_STUDENTS(myHalaqat);
+  else if(SCREEN==='reports') content = TEACHER_REPORTS(myHalaqat);
+  const nav = NAV([
+    {key:'home', icon:ICONS.check, label:'الحضور'},
+    {key:'record', icon:ICONS.bead, label:'التسميع'},
+    {key:'students', icon:ICONS.users, label:'طلابي'},
+    {key:'reports', icon:ICONS.chart, label:'التقارير'}
+  ]);
+  return top + `<main>${content}</main>` + nav;
+}
+
+function TEACHER_ATTENDANCE(myHalaqat){
+  if(!myHalaqat.length) return '<div class="empty"><span class="ic">'+ICONS.book+'</span>لم يتم تعيينك لأي حلقة بعد</div>';
+  const today = todayStr();
+  return myHalaqat.map(h=>{
+    const key = today+'_'+h.id;
+    const rec = DATA.attendance[key] || {};
+    return `<div class="card">
+      <h3>${esc(h.name)}</h3>
+      <div class="muted" style="margin-bottom:10px;">${dateLabel(today)}</div>
+      ${studentsOf(h.id).map(s=>{
+        const cur = rec[s.id] || '';
+        return `<div class="list-item">
+          <div class="row" style="gap:10px;"><div class="avatar">${esc(s.name[0])}</div><div style="font-weight:700;font-size:14px;">${esc(s.name)}</div></div>
+          <div class="seg" style="max-width:180px;">
+            <button class="grade-btn excellent ${cur==='حاضر'?'active':''}" onclick="markAttendance('${h.id}','${s.id}','حاضر')">حاضر</button>
+            <button class="grade-btn weak ${cur==='غائب'?'active':''}" onclick="markAttendance('${h.id}','${s.id}','غائب')">غائب</button>
+            <button class="grade-btn good ${cur==='متأخر'?'active':''}" onclick="markAttendance('${h.id}','${s.id}','متأخر')">متأخر</button>
+          </div>
+        </div>`;
+      }).join('') || '<div class="muted">لا يوجد طلاب في هذه الحلقة</div>'}
+    </div>`;
+  }).join('');
+}
+async function markAttendance(halaqaId, studentId, status){
+  const key = todayStr()+'_'+halaqaId;
+  if(!DATA.attendance[key]) DATA.attendance[key] = {};
+  DATA.attendance[key][studentId] = status;
+  await saveData(); render();
+}
+
+function TEACHER_RECORD(myHalaqat){
+  const students = myHalaqat.flatMap(h=>studentsOf(h.id));
+  if(!students.length) return '<div class="empty">لا يوجد طلاب في حلقتك</div>';
+  return `<button class="btn primary block" style="margin-bottom:14px;" onclick="openModal('addRecord')">${ICONS.plus} تسجيل تسميع جديد</button>` +
+  students.map(s=>{
+    const recs = (DATA.memorization[s.id]||[]).slice().reverse().slice(0,3);
+    return `<div class="card">
+      <h3>${esc(s.name)}</h3>
+      <div class="tasbih">${Array.from({length:30},(_,i)=>i+1).map(n=>`<div class="bead ${completedJuzList(s.id).includes(n)?'done':''}">${n}</div>`).join('')}</div>
+      ${recs.length? recs.map(r=>`<div class="list-item"><div><div style="font-size:13px;">${esc(r.surah)} (${esc(r.from)}-${esc(r.to)})</div><div class="muted">${dateLabel(r.date)}</div></div><span class="pill ${r.grade==='ممتاز'?'sage':r.grade==='جيد'?'amber':'rose'}">${esc(r.grade)}</span></div>`).join('') : '<div class="muted">لا يوجد تسميع مسجل بعد</div>'}
+    </div>`;
+  }).join('');
+}
+
+function TEACHER_STUDENTS(myHalaqat){
+  return myHalaqat.map(h=>`<div class="card">
+    <h3>${esc(h.name)}</h3>
+    ${studentsOf(h.id).map(s=>{
+      const a = studentAttendanceStats(s.id);
+      const juz = completedJuzList(s.id).length;
+      return `<div class="list-item">
+        <div class="row" style="gap:10px;"><div class="avatar">${esc(s.name[0])}</div><div><div style="font-weight:700;font-size:14px;">${esc(s.name)}</div><div class="muted">حضور ${a.present} · غياب ${a.absent}</div></div></div>
+        <span class="pill gold">${juz} جزء</span>
+      </div>`;
+    }).join('') || '<div class="muted">لا يوجد طلاب</div>'}
+  </div>`).join('');
+}
+
+function TEACHER_REPORTS(myHalaqat){
+  return myHalaqat.map(h=>{
+    const rate = attendanceRate(h.id);
+    const st = studentsOf(h.id);
+    const totalJuz = st.reduce((sum,s)=>sum+completedJuzList(s.id).length,0);
+    return `<div class="card">
+      <h3>${esc(h.name)}</h3>
+      <div class="stat-grid" style="margin-top:10px;">
+        <div class="stat"><div class="n">${rate===null?'—':rate+'%'}</div><div class="l">نسبة الحضور (30 يوم)</div></div>
+        <div class="stat gold"><div class="n">${totalJuz}</div><div class="l">إجمالي الأجزاء</div></div>
+      </div>
+    </div>`;
+  }).join('') || '<div class="empty">لا توجد بيانات</div>';
+}
+
+/* ---------------- PARENT ---------------- */
+function PARENT_SCREEN(){
+  const s = getStudent(SESSION.studentId);
+  const top = TOPBAR('ورد ودود', 'ولي أمر: '+(s?s.name:''));
+  let content='';
+  if(SCREEN==='home') content = PARENT_PROGRESS(s);
+  else content = PARENT_HISTORY(s);
+  const nav = NAV([
+    {key:'home', icon:ICONS.bead, label:'التقدم'},
+    {key:'history', icon:ICONS.calendar, label:'السجل'}
+  ]);
+  return top + `<main>${content}</main>` + nav;
+}
+
+function PARENT_PROGRESS(s){
+  if(!s) return '<div class="empty">لم يتم العثور على الطالب</div>';
+  const juzDone = completedJuzList(s.id);
+  const h = getHalaqa(s.halaqaId);
+  const a = studentAttendanceStats(s.id);
+  return `
+  <div class="card" style="text-align:center;">
+    <div class="avatar" style="width:56px;height:56px;font-size:20px;margin:0 auto 8px;">${esc(s.name[0])}</div>
+    <h3>${esc(s.name)}</h3>
+    <div class="muted">${esc(h?h.name:'غير مسجل بحلقة')}</div>
+  </div>
+  <div class="stat-grid">
+    <div class="stat gold"><div class="n">${juzDone.length}</div><div class="l">من 30 جزء محفوظ</div></div>
+    <div class="stat"><div class="n">${a.total? Math.round(a.present/a.total*100)+'%':'—'}</div><div class="l">نسبة الحضور</div></div>
+  </div>
+  <div class="card">
+    <h3 style="margin-bottom:10px;">مسبحة التقدم</h3>
+    <div class="tasbih">${Array.from({length:30},(_,i)=>i+1).map(n=>`<div class="bead ${juzDone.includes(n)?'done':''}">${n}</div>`).join('')}</div>
+    <div class="muted" style="text-align:center;margin-top:6px;">كل خرزة ذهبية تمثل جزءًا مكتملاً من كتاب الله</div>
+  </div>`;
+}
+
+function PARENT_HISTORY(s){
+  if(!s) return '<div class="empty">لم يتم العثور على الطالب</div>';
+  const recs = (DATA.memorization[s.id]||[]).slice().reverse();
+  const attKeys = Object.keys(DATA.attendance).filter(k=>DATA.attendance[k][s.id]).sort().reverse().slice(0,10);
+  return `
+  <div class="card">
+    <h3>آخر جلسات التسميع</h3>
+    ${recs.length? recs.map(r=>`<div class="list-item">
+      <div><div style="font-size:13px;font-weight:700;">${esc(r.surah)} (${esc(r.from)}-${esc(r.to)})</div><div class="muted">${dateLabel(r.date)}${r.note?' · '+esc(r.note):''}</div></div>
+      <span class="pill ${r.grade==='ممتاز'?'sage':r.grade==='جيد'?'amber':'rose'}">${esc(r.grade)}</span>
+    </div>`).join('') : '<div class="muted">لا يوجد سجل تسميع بعد</div>'}
+  </div>
+  <div class="card">
+    <h3>سجل الحضور الأخير</h3>
+    ${attKeys.length? attKeys.map(k=>{
+      const date = k.split('_')[0];
+      const st = DATA.attendance[k][s.id];
+      return `<div class="list-item"><div class="muted">${dateLabel(date)}</div><span class="pill ${st==='حاضر'?'sage':st==='متأخر'?'amber':'rose'}">${esc(st)}</span></div>`;
+    }).join('') : '<div class="muted">لا يوجد سجل حضور بعد</div>'}
+  </div>`;
+}
+
+/* ---------------- MODALS ---------------- */
+function MODAL_HTML(){
+  const n = MODAL.name, p = MODAL.payload;
+  let inner='';
+  if(n==='addHalaqa' || n==='editHalaqa'){
+    const h = p.id ? getHalaqa(p.id) : null;
+    inner = `
+    <div class="sheet-head"><h3>${h?'تعديل الحلقة':'إضافة حلقة'}</h3><button class="close-x" onclick="closeModal()">${ICONS.close}</button></div>
+    <div class="field"><label>اسم الحلقة</label><input id="f_name" value="${h?esc(h.name):''}" placeholder="مثال: حلقة الفجر"></div>
+    <div class="field"><label>المعلم المسؤول</label><select id="f_teacher">
+      <option value="">بدون معلم</option>
+      ${DATA.teachers.map(t=>`<option value="${t.id}" ${h&&h.teacherId===t.id?'selected':''}>${esc(t.name)}</option>`).join('')}
+    </select></div>
+    <div class="field"><label>المستوى</label><select id="f_level">
+      ${['مبتدئ','متوسط','متقدم'].map(l=>`<option ${h&&h.level===l?'selected':''}>${l}</option>`).join('')}
+    </select></div>
+    <div class="field"><label>موعد الحلقة</label><input id="f_schedule" value="${h?esc(h.schedule):''}" placeholder="مثال: يوميًا بعد العصر"></div>
+    <button class="btn primary block" onclick="submitHalaqa('${h?h.id:''}')">حفظ</button>`;
+  } else if(n==='addTeacher'){
+    inner = `
+    <div class="sheet-head"><h3>إضافة معلم</h3><button class="close-x" onclick="closeModal()">${ICONS.close}</button></div>
+    <div class="field"><label>الاسم</label><input id="f_name" placeholder="اسم المعلم"></div>
+    <div class="field"><label>رقم الهاتف</label><input id="f_phone" placeholder="رقم التواصل"></div>
+    <button class="btn primary block" onclick="submitTeacher()">حفظ</button>`;
+  } else if(n==='addStudent' || n==='editStudent'){
+    const s = p.id ? getStudent(p.id) : null;
+    inner = `
+    <div class="sheet-head"><h3>${s?'تعديل بيانات الطالب':'إضافة طالب'}</h3><button class="close-x" onclick="closeModal()">${ICONS.close}</button></div>
+    <div class="field"><label>اسم الطالب</label><input id="f_name" value="${s?esc(s.name):''}" placeholder="اسم الطالب"></div>
+    <div class="field"><label>الحلقة</label><select id="f_halaqa">
+      <option value="">بدون حلقة</option>
+      ${DATA.halaqat.map(h=>`<option value="${h.id}" ${s&&s.halaqaId===h.id?'selected':''}>${esc(h.name)}</option>`).join('')}
+    </select></div>
+    <div class="field"><label>رقم هاتف ولي الأمر</label><input id="f_phone" value="${s?esc(s.parentPhone):''}" placeholder="رقم التواصل"></div>
+    <button class="btn primary block" onclick="submitStudent('${s?s.id:''}')">حفظ</button>`;
+  } else if(n==='addRecord'){
+    const myHalaqat = halaqatOf(SESSION.teacherId);
+    const students = myHalaqat.flatMap(h=>studentsOf(h.id));
+    inner = `
+    <div class="sheet-head"><h3>تسجيل تسميع</h3><button class="close-x" onclick="closeModal()">${ICONS.close}</button></div>
+    <div class="field"><label>الطالب</label><select id="f_student">
+      ${students.map(s=>`<option value="${s.id}">${esc(s.name)}</option>`).join('')}
+    </select></div>
+    <div class="field"><label>السورة</label><input id="f_surah" placeholder="مثال: سورة البقرة"></div>
+    <div class="row" style="gap:10px;">
+      <div class="field" style="flex:1;"><label>من آية</label><input id="f_from" placeholder="1"></div>
+      <div class="field" style="flex:1;"><label>إلى آية</label><input id="f_to" placeholder="10"></div>
+    </div>
+    <div class="field"><label>التقييم</label>
+      <div class="seg" id="f_grade_seg">
+        <button type="button" class="grade-btn excellent active" data-g="ممتاز" onclick="pickGrade(this)">ممتاز</button>
+        <button type="button" class="grade-btn good" data-g="جيد" onclick="pickGrade(this)">جيد</button>
+        <button type="button" class="grade-btn weak" data-g="يحتاج مراجعة" onclick="pickGrade(this)">يحتاج مراجعة</button>
+      </div>
+    </div>
+    <div class="field"><label>رقم الجزء المكتمل (اختياري)</label><input id="f_juz" type="number" min="1" max="30" placeholder="اتركه فارغًا إن لم يكتمل جزء"></div>
+    <div class="field"><label>ملاحظة</label><textarea id="f_note" placeholder="ملاحظات المعلم"></textarea></div>
+    <button class="btn primary block" onclick="submitRecord()">حفظ</button>`;
+  }
+  return `<div class="modal-overlay"><div class="sheet">${inner}</div></div>`;
+}
+
+function pickGrade(btn){
+  btn.parentElement.querySelectorAll('.grade-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+}
+
+async function submitHalaqa(id){
+  const name = document.getElementById('f_name').value.trim();
+  if(!name){ alert('من فضلك أدخل اسم الحلقة'); return; }
+  const teacherId = document.getElementById('f_teacher').value || null;
+  const level = document.getElementById('f_level').value;
+  const schedule = document.getElementById('f_schedule').value.trim();
+  if(id){
+    const h = getHalaqa(id);
+    h.name=name; h.teacherId=teacherId; h.level=level; h.schedule=schedule;
+  } else {
+    DATA.halaqat.push({id:uid('h'), name, teacherId, level, schedule});
+  }
+  await saveData(); closeModal();
+}
+
+async function submitTeacher(){
+  const name = document.getElementById('f_name').value.trim();
+  if(!name){ alert('من فضلك أدخل اسم المعلم'); return; }
+  const phone = document.getElementById('f_phone').value.trim();
+  DATA.teachers.push({id:uid('t'), name, phone});
+  await saveData(); closeModal();
+}
+
+async function submitStudent(id){
+  const name = document.getElementById('f_name').value.trim();
+  if(!name){ alert('من فضلك أدخل اسم الطالب'); return; }
+  const halaqaId = document.getElementById('f_halaqa').value || null;
+  const parentPhone = document.getElementById('f_phone').value.trim();
+  if(id){
+    const s = getStudent(id);
+    s.name=name; s.halaqaId=halaqaId; s.parentPhone=parentPhone;
+  } else {
+    DATA.students.push({id:uid('s'), name, halaqaId, parentPhone});
+  }
+  await saveData(); closeModal();
+}
+
+async function submitRecord(){
+  const studentId = document.getElementById('f_student').value;
+  const surah = document.getElementById('f_surah').value.trim();
+  const from = document.getElementById('f_from').value.trim();
+  const to = document.getElementById('f_to').value.trim();
+  const gradeBtn = document.querySelector('#f_grade_seg .active');
+  const grade = gradeBtn ? gradeBtn.dataset.g : 'ممتاز';
+  const juzVal = document.getElementById('f_juz').value;
+  const note = document.getElementById('f_note').value.trim();
+  if(!surah){ alert('من فضلك أدخل اسم السورة'); return; }
+  if(!DATA.memorization[studentId]) DATA.memorization[studentId] = [];
+  DATA.memorization[studentId].push({id:uid('r'), date:todayStr(), surah, from, to, grade, note});
+  if(juzVal && grade!=='يحتاج مراجعة'){
+    const juzNum = parseInt(juzVal,10);
+    if(juzNum>=1 && juzNum<=30){
+      if(!DATA.completedJuz[studentId]) DATA.completedJuz[studentId]=[];
+      if(!DATA.completedJuz[studentId].includes(juzNum)) DATA.completedJuz[studentId].push(juzNum);
+    }
+  }
+  await saveData(); closeModal();
+}
+
+loadAll();
+</script>
+</body>
+</html>
